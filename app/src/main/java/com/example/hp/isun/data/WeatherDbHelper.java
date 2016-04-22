@@ -1,4 +1,4 @@
-package com.example.hp.isun;
+package com.example.hp.isun.data;
 
 /**
  * Created by HP on 20/04/2016.
@@ -23,8 +23,8 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import com.example.hp.isun.WeatherContract.LocationEntry;
-import com.example.hp.isun.WeatherContract.WeatherEntry;
+import com.example.hp.isun.data.WeatherContract.LocationEntry;
+import com.example.hp.isun.data.WeatherContract.WeatherEntry;
 
 //import com.example.android.sunshine.app.data.WeatherContract.LocationEntry;
 //import com.example.android.sunshine.app.data.WeatherContract.WeatherEntry;
@@ -44,12 +44,23 @@ public class WeatherDbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
-        final String SQL_CREATE_WEATHER_TABLE = "CREATE TABLE " + WeatherEntry.TABLE_NAME + " (" +
+        final String SQL_CREATE_LOCATION_TABLE = "CREATE TABLE " + LocationEntry.TABLE_NAME + " (" +
+                LocationEntry._ID + " INTEGER PRIMARY KEY," +
+                LocationEntry.COLUMN_LOCATION_SETTING + "  TEXT UNIQUE NOT NULL, " +
+                LocationEntry.COLUMN_CITY_NAME + "  TEXT NOT NULL, " +
+                LocationEntry.COLUMN_COORD_LAT + "  REAL NOT NULL, " +
+                LocationEntry.COLUMN_COORD_LONG + "  REAL NOT NULL " +
+                " );";
+        sqLiteDatabase.execSQL(SQL_CREATE_LOCATION_TABLE);
+
                 // Why AutoIncrement here, and not above?
                 // Unique keys will be auto-generated in either case.  But for weather
                 // forecasting, it's reasonable to assume the user will want information
                 // for a certain date and all dates *following*, so the forecast data
+
                 // should be sorted accordingly.
+        final String SQL_CREATE_WEATHER_TABLE = "CREATE TABLE " + WeatherEntry.TABLE_NAME + " (" +
+
                 WeatherEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
 
                 // the ID of the location entry associated with this weather data
