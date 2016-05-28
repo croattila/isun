@@ -24,8 +24,8 @@ import android.os.AsyncTask;
 import android.text.format.Time;
 import android.util.Log;
 
-import com.example.hp.isun.data.WeatherContract;
 import com.example.hp.isun.data.WeatherContract.WeatherEntry;
+import com.example.hp.isun.data.WeatherContract;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -43,25 +43,13 @@ public class FetchWeatherTask extends AsyncTask<String, Void, Void> {
 
     private final String LOG_TAG = FetchWeatherTask.class.getSimpleName();
 
-
     private final Context mContext;
 
     public FetchWeatherTask(Context context) {
         mContext = context;
-
     }
 
     private boolean DEBUG = true;
-
-    /* The date/time conversion code is going to be moved outside the asynctask later,
-     * so for convenience we're breaking it out into its own method now.
-     */
-
-
-    /**
-     * Prepare the weather high/lows for presentation.
-     */
-
 
     /**
      * Helper method to handle insertion of a new location in the weather database.
@@ -75,8 +63,7 @@ public class FetchWeatherTask extends AsyncTask<String, Void, Void> {
     public long addLocation(String locationSetting, String cityName, double lat, double lon) {
         long locationId;
 
-
-        //Megnezzuk hogy van-e ilyen hely a db-ben
+        // First, check if the location with this city name exists in the db
         Cursor locationCursor = mContext.getContentResolver().query(
                 WeatherContract.LocationEntry.CONTENT_URI,
                 new String[]{WeatherContract.LocationEntry._ID},
@@ -87,41 +74,37 @@ public class FetchWeatherTask extends AsyncTask<String, Void, Void> {
         if (locationCursor.moveToFirst()) {
             int locationIdIndex = locationCursor.getColumnIndex(WeatherContract.LocationEntry._ID);
             locationId = locationCursor.getLong(locationIdIndex);
-
         } else {
-            //Ha nincs benne, akkor nagyon egyszeruen beletesszuk, nem?
+            // Now that the content provider is set up, inserting rows of data is pretty simple.
+            // First create a ContentValues object to hold the data you want to insert.
             ContentValues locationValues = new ContentValues();
 
-            //Hozzaadjuk az adatokat, hogy a contact provider tudja,
-            //milyen ertekek lesznek beteve,no
+            // Then add the data, along with the corresponding name of the data type,
+            // so the content provider knows what kind of value is being inserted.
             locationValues.put(WeatherContract.LocationEntry.COLUMN_CITY_NAME, cityName);
             locationValues.put(WeatherContract.LocationEntry.COLUMN_LOCATION_SETTING, locationSetting);
             locationValues.put(WeatherContract.LocationEntry.COLUMN_COORD_LAT, lat);
             locationValues.put(WeatherContract.LocationEntry.COLUMN_COORD_LONG, lon);
 
-
-            //Es a vegen insert
+            // Finally, insert location data into the database.
             Uri insertedUri = mContext.getContentResolver().insert(
                     WeatherContract.LocationEntry.CONTENT_URI,
                     locationValues
             );
 
-            // Az eredmeny Uri a sor Id-jet tartalmazza. Csak ki kell nyerni az Uri-bol
-
+            // The resulting URI contains the ID for the row.  Extract the locationId from the Uri.
             locationId = ContentUris.parseId(insertedUri);
-
-
         }
+
         locationCursor.close();
+        // Wait, that worked?  Yes!
         return locationId;
-
     }
-
 
     /**
      * Take the String representing the complete forecast in JSON Format and
      * pull out the data we need to construct the Strings needed for the wireframes.
-     * <p/>
+     * <p>
      * Fortunately parsing is easy:  constructor takes the JSON string and converts it
      * into an Object hierarchy for us.
      */
@@ -247,21 +230,21 @@ public class FetchWeatherTask extends AsyncTask<String, Void, Void> {
 
                 cVVector.add(weatherValues);
             }
+
             int inserted = 0;
             // add to database
             if (cVVector.size() > 0) {
-                // Student: call bulkInsert to add the weatherEntries to the database here
                 ContentValues[] cvArray = new ContentValues[cVVector.size()];
                 cVVector.toArray(cvArray);
                 inserted = mContext.getContentResolver().bulkInsert(WeatherEntry.CONTENT_URI, cvArray);
             }
 
+            Log.d(LOG_TAG, "FetchWeatherTask Complete. " + inserted + " Inserted");
 
         } catch (JSONException e) {
             Log.e(LOG_TAG, e.getMessage(), e);
             e.printStackTrace();
         }
-
     }
 
     @Override
@@ -354,9 +337,6 @@ public class FetchWeatherTask extends AsyncTask<String, Void, Void> {
                 }
             }
         }
-
         return null;
     }
-
-
 }
